@@ -33,13 +33,18 @@ public class GridGenerator : MonoBehaviour {
     public Vector3 Zxyz;
     public Vector3 Sxyz;
 
-
-    //Constants
     private int MAX = 64998; //Maximun amount of vertecies that a mesh can have
+    TextAsset ColorsFile;
+    int[,,] colors;
+    Vector4 []colorsvector; 
 
 
     // Use this for initialization
     void Start() {
+        ColorsFile = Resources.Load("MRcolorTest") as TextAsset;
+        colors = Utility.ReadColorsFromText(ColorsFile.text, Slices, Rows, Columns);
+        //colorsvector = Utility.ReadColorsFromTextRV(ColorsFile.text);
+
         DrawGrid();
     }
 
@@ -55,9 +60,7 @@ public class GridGenerator : MonoBehaviour {
     }
 
     //This method creates a new mesh every 64998 vertecies
-    void DrawGrid()   {
-        
-       
+    void DrawGrid()   { 
         int vertCounter = 6 * Slices * (Rows-2) * (Columns-2); // Total amount of vertices
         Debug.Log(vertCounter);
         int size = vertCounter <= MAX ? vertCounter : MAX;  //Current size of arrays 
@@ -68,8 +71,7 @@ public class GridGenerator : MonoBehaviour {
         Vector3[] verts = new Vector3[size];
         Vector2[] uvs = new Vector2[size];
         int[] triangs = new int[size];
-        Color[] colors = new Color[size];
-
+        Color[] vertColors = new Color[size]; 
 
         for (int k = 0; k < Slices; k++)
         {          
@@ -109,40 +111,37 @@ public class GridGenerator : MonoBehaviour {
                     triangs[idx + 5] = idx + 5;
 
                     //Set up verticies colors
-                    colors[idx] = Color.red;
-                    colors[idx + 1] = Color.green;
-                    colors[idx + 2] = Color.blue;
-                    colors[idx + 3] = Color.red;
-                    colors[idx + 4] = Color.green;
-                    colors[idx + 5] = Color.blue;
+                    vertColors[idx] = new Color(colors[k, j, i], colors[k, j, i], colors[k, j, i]);
+                    vertColors[idx + 1] = new Color(colors[k, j, i + 1], colors[k, j, i + 1], colors[k, j, i + 1]);
+                    vertColors[idx + 2] = new Color(colors[k, j + 1, i + 1], colors[k, j + 1, i + 1], colors[k, j + 1, i + 1]);
+                    vertColors[idx + 3] = new Color(colors[k, j + 1, i + 1], colors[k, j + 1, i + 1], colors[k, j + 1, i + 1]);
+                    vertColors[idx + 4] = new Color(colors[k, j + 1, i], colors[k, j + 1, i], colors[k, j + 1, i]);
+                    vertColors[idx + 5] = new Color(colors[k, j, i], colors[k, j, i], colors[k, j, i]);
 
                     idx += 6;
                     vertCounter-=6;
 
                     if (idx == MAX )
                     {
-                        Debug.Log("IN "+vertCounter);
                         //The mesh reashed its maximum capacity, create a new mesh 
-                        getNewMesh(mesh_ob, verts, uvs, triangs, colors); 
+                        getNewMesh(mesh_ob, verts, uvs, triangs, vertColors); 
                        
                         //Reset values
                         size = size = vertCounter <= MAX ? vertCounter : MAX; //Get a new size for arrays 
                         mesh_ob = Instantiate(meshcombiner);
-                        Debug.Log(size);
                         verts = new Vector3[size];
                         uvs = new Vector2[size];
                         triangs = new int[size];
-                        colors = new Color[size];
+                        vertColors = new Color[size];
                         idx = 0;
                     }
                 }
             }            
         }
-        getNewMesh(mesh_ob, verts, uvs, triangs, colors);
+        getNewMesh(mesh_ob, verts, uvs, triangs, vertColors);
     }
 
     void getNewMesh(GameObject old, Vector3[] verts, Vector2[] uvs,  int[] triangs,  Color[] colors = null){
-        Debug.Log("IN");
         Mesh mesh = new Mesh();
         old.GetComponent<MeshFilter>().mesh = mesh;
         mesh.vertices = verts;
@@ -150,7 +149,7 @@ public class GridGenerator : MonoBehaviour {
         mesh.triangles = triangs;
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
-        //mesh.colors = colors;
+        mesh.colors = colors;
         old.transform.parent = (meshcombiner.transform.parent);
 
     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+//TODO : tried to combine meshes and see if it optimize 
 public class CombineMeshes : MonoBehaviour {
 
     Mesh mesh;
